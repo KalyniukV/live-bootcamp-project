@@ -1,5 +1,4 @@
 use auth_service::Application;
-use axum::body;
 use reqwest::Client;
 use uuid::Uuid;
 
