@@ -1,16 +1,15 @@
 use serde::Serialize;
 use validator::validate_email;
-use super::AuthAPIError;
 
 #[derive(Debug, Serialize, Clone, PartialEq, Eq, Hash)]
 pub struct Email(String);
 
 impl Email {
-    pub fn parse(s: String) -> Result<Self, AuthAPIError> {
+    pub fn parse(s: String) -> Result<Self, String> {
         if validate_email(&s) {
             Ok(Email(s))
         } else {
-            Err(AuthAPIError::InvalidCredentials)
+            Err(format!("{} is not a valid email.", s))
         }
     }
 }

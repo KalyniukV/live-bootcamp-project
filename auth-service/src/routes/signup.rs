@@ -17,21 +17,13 @@ pub async fn signup(
     let password: Password;
 
     match Email::parse(request.email) {
-        Ok(e) => {
-            email = e;
-        }
-        Err(err) => {
-            return Err(err);
-        }
+        Ok(e) => email = e,
+        Err(_) => return Err(AuthAPIError::InvalidCredentials)
     }
 
     match Password::parse(request.password) {
-        Ok(p) => {
-            password = p;
-        }
-        Err(err) => {
-            return Err(err);
-        }
+        Ok(p) =>  password = p,
+        Err(_) => return Err(AuthAPIError::InvalidCredentials)
     }
 
     let mut user_store = state.user_store.write().await;

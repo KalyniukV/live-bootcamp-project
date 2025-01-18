@@ -1,16 +1,14 @@
 use serde::Serialize;
 
-use super::AuthAPIError;
-
 #[derive(Debug, Serialize, Clone, PartialEq, Eq, Hash)]
 pub struct Password(String);
 
 impl Password {
-    pub fn parse(s: String) -> Result<Self, AuthAPIError> {
+    pub fn parse(s: String) -> Result<Self, String> {
         if s.len() >= 8 {
             Ok(Password(s))
         } else{
-            Err(AuthAPIError::InvalidCredentials)
+            Err("Failed to parse string to a Password type".to_string())
         }
     }
 }

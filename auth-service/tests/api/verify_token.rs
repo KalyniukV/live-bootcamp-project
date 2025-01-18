@@ -4,7 +4,7 @@ use crate::helpers::TestApp;
 async fn verify_token_verifies_jwt() {
     let app = TestApp::new().await;
 
-    let response = app.verify_token("token").await;
+    let response = app.post_verify_token("token").await;
 
     assert_eq!(response.status().as_u16(), 200);
 }

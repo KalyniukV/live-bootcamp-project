@@ -8,7 +8,7 @@ async fn verify_2fa_verifies_token() {
     let login_attempt_id = "login_id";
     let code_2fa =  "some code";
 
-    let response = app.verify_2fa(email, login_attempt_id, code_2fa).await;
+    let response = app.post_verify_2fa(email, login_attempt_id, code_2fa).await;
 
     assert_eq!(response.status().as_u16(), 200);
 }

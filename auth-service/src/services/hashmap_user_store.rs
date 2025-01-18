@@ -21,27 +21,21 @@ impl UserStore for HashmapUserStore {
 
     async fn get_user(&self, email: &Email) -> Result<User, UserStoreError> {   
         match self.users.get(email) {
-            Some(user) => {
-                return Ok(user.clone());
-            }
-            None => {
-                return Err(UserStoreError::UserNotFound);
-            }
+            Some(user) => Ok(user.clone()),
+            None => Err(UserStoreError::UserNotFound)
         }
     }
 
     async fn validate_user(&self, email: &Email, password: &Password) -> Result<(), UserStoreError> {
-        match self.get_user(email).await {
-            Ok(user) => {
-                if &user.get_password() != password {
-                    return Err(UserStoreError::InvalidCredentials);
+        match self.users.get(email) {
+            Some(user) => {
+                if user.get_password().eq(password) {
+                    Ok(())
+                } else {
+                    Err(UserStoreError::InvalidCredentials)
                 }
-
-                Ok(())
-            },
-            Err(error) => {
-                return Err(error);
             }
+            None => Err(UserStoreError::UserNotFound),
         }
     }
 }
