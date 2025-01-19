@@ -1,9 +1,15 @@
 use std::error::Error;
 use app_state::AppState;
-use axum::{http::StatusCode, response::{IntoResponse, Response}, routing::post, serve::Serve, Json, Router};
+use axum::{
+    http::{Method, StatusCode},
+    response::{IntoResponse, Response},
+    routing::post,
+    serve::Serve,
+    Json, Router,
+};
 use domain::AuthAPIError;
 use serde::{Deserialize, Serialize};
-use tower_http::services::ServeDir;
+use tower_http::{cors::CorsLayer, services::ServeDir};
 
 pub mod routes;
 pub mod domain;
@@ -19,6 +25,16 @@ pub struct Application {
 
 impl Application {
     pub async fn build(app_state: AppState, address: &str) -> Result<Self, Box<dyn Error>> {
+        let allowed_origins = [
+            "http://localhost:8000".parse()?,
+            "http://161.35.57.220:8000".parse()?,
+        ];
+
+        let cors = CorsLayer::new()
+            .allow_methods([Method::GET, Method::POST])
+            .allow_credentials(true)
+            .allow_origin(allowed_origins);
+
         let router = Router::new()
             .nest_service("/", ServeDir::new("assets"))
             .route("/signup", post(routes::signup))
@@ -26,7 +42,8 @@ impl Application {
             .route("/verify-2fa", post(routes::verify_2fa))
             .route("/logout", post(routes::logout))
             .route("/verify-token", post(routes::verify_token))
-            .with_state(app_state);
+            .with_state(app_state)
+            .layer(cors);
 
         let listener = tokio::net::TcpListener::bind(address).await?;
         let address = listener.local_addr()?.to_string();
@@ -53,13 +70,15 @@ impl IntoResponse for AuthAPIError {
             AuthAPIError::UserAlreadyExists => (StatusCode::CONFLICT, "User already exists"),
             AuthAPIError::InvalidCredentials => (StatusCode::BAD_REQUEST, "Invalid credentials"),
             AuthAPIError::IncorrectCredentials => (StatusCode::UNAUTHORIZED, "Incorrect credentials"),
-            AuthAPIError::UnexpectedError => {
-                (StatusCode::INTERNAL_SERVER_ERROR, "Unexpected error")
-            }
+            AuthAPIError::MissingToken => (StatusCode::BAD_REQUEST, "Missing token"),
+            AuthAPIError::InvalidToken => (StatusCode::UNAUTHORIZED, "Invalid token"),
+            AuthAPIError::UnexpectedError => (StatusCode::INTERNAL_SERVER_ERROR, "Unexpected error")
         };
+
         let body = Json(ErrorResponse {
             error: error_message.to_string(),
         });
+
         (status, body).into_response()
     }
 }

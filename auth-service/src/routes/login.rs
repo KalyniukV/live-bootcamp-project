@@ -54,6 +54,6 @@ pub struct LoginRequest {
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
-pub struct LogiResponse {
+pub struct LoginResponse {
     pub message: String
 }
