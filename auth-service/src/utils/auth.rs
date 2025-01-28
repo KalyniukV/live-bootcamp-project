@@ -3,7 +3,7 @@ use chrono::Utc;
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Validation};
 use serde::{Deserialize, Serialize};
 
-use crate::{app_state::BannedTokenSoreType, domain::{email::Email, BannedTokenStore}};
+use crate::{app_state::BannedTokenStoreType, domain::{email::Email, BannedTokenStore}};
 
 use super::constants::{JWT_COOKIE_NAME, JWT_SECRET};
 
@@ -60,7 +60,7 @@ fn generate_auth_token(email: &Email) -> Result<String, GenerateTokenError> {
 }
 
 // Check if JWT auth token is valid by decoding it using the JWT secret
-pub async fn validate_token(token: &str, banned_token_store: BannedTokenSoreType) -> Result<Claims, String> {    
+pub async fn validate_token(token: &str, banned_token_store: BannedTokenStoreType) -> Result<Claims, String> {
     let banned_token_store = banned_token_store.read().await; 
     if banned_token_store.token_is_banned(token).await {
         return Err("token is banned".to_string());

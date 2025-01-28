@@ -15,10 +15,14 @@ impl User {
     }
 
     pub fn get_email(&self) -> Email {
-        return self.email.clone();
+        self.email.clone()
     }
 
     pub fn get_password(&self) -> Password {
-        return self.password.clone();
-    } 
+        self.password.clone()
+    }
+
+    pub fn use_requires_2fa(&self) -> bool {
+        self.requires_2fa
+    }
 }
