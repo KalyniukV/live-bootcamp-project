@@ -1,7 +1,8 @@
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use crate::domain::{BannedTokenStore, EmailClient, TwoFACodeStore, UserStore};
+use crate::domain::EmailClient;
+use crate::domain::data_store::{BannedTokenStore, TwoFACodeStore, UserStore};
 
 pub type UserStoreType = Arc<RwLock<dyn UserStore>>;
 pub type BannedTokenStoreType = Arc<RwLock<dyn BannedTokenStore>>;

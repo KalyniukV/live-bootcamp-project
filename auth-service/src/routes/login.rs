@@ -4,7 +4,7 @@ use axum_extra::extract::CookieJar;
 use serde::{Deserialize, Serialize};
 
 use crate::{app_state::AppState, domain::{AuthAPIError, Email, Password}, utils::auth::generate_auth_cookie};
-use crate::domain::{LoginAttemptId, TwoFACode};
+use crate::domain::data_store::{LoginAttemptId, TwoFACode};
 
 
 pub async fn login(

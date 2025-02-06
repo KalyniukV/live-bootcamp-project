@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
-use crate::domain::{Email, Password, User, UserStore, UserStoreError};
+use crate::domain::{Email, Password, User};
+use crate::domain::data_store::{UserStore, UserStoreError};
 
 #[derive(Default)]
 pub struct HashmapUserStore {

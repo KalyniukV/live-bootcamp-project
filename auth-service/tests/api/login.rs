@@ -6,7 +6,7 @@ use crate::helpers::{get_random_email, TestApp};
 
 #[tokio::test]
 async fn should_return_422_if_malformed_credentials() {
-    let app = TestApp::new().await;
+    let mut app = TestApp::new().await;
 
     let random_email = get_random_email();
 
@@ -31,12 +31,14 @@ async fn should_return_422_if_malformed_credentials() {
             test_case
         );
     }
+
+    app.clean_up().await;
 }
 
 
 #[tokio::test]
 async fn should_return_400_if_invalid_input() {
-    let app = TestApp::new().await;
+    let mut app = TestApp::new().await;
 
     let random_email = get_random_email();
 
@@ -68,13 +70,15 @@ async fn should_return_400_if_invalid_input() {
             test_case
         );
     }
+
+    app.clean_up().await;
 }
 
 
 
 #[tokio::test]
 async fn should_return_401_if_incorrect_credentials() {
-    let app = TestApp::new().await;
+    let mut app = TestApp::new().await;
 
     let random_email = get_random_email();
 
@@ -89,11 +93,11 @@ async fn should_return_401_if_incorrect_credentials() {
     let test_cases = [
         serde_json::json!({
             "email": random_email,
-            "password": "wrong_password"                   
+            "password": "wrong_password"
         }),
         serde_json::json!({
             "email": "anoter@mail.com",
-            "password": "12345678"               
+            "password": "12345678"
         }),
     ];
     
@@ -106,12 +110,14 @@ async fn should_return_401_if_incorrect_credentials() {
             test_case
         );
     }
+
+    app.clean_up().await;
 }
 
 
 #[tokio::test]
 async fn should_return_200_if_valid_credentials_and_2fa_disabled() {
-    let app = TestApp::new().await;
+    let mut app = TestApp::new().await;
 
     let random_email = get_random_email();
 
@@ -140,11 +146,13 @@ async fn should_return_200_if_valid_credentials_and_2fa_disabled() {
         .expect("No auth cookie found");
 
     assert!(!auth_cookie.value().is_empty());
+
+    app.clean_up().await;
 }
 
 #[tokio::test]
 async fn should_return_206_if_valid_credentials_and_2fa_enabled() {
-    let app = TestApp::new().await;
+    let mut app = TestApp::new().await;
 
     let random_email = get_random_email();
 
@@ -172,10 +180,14 @@ async fn should_return_206_if_valid_credentials_and_2fa_enabled() {
 
     assert_eq!(json_body.message, "2FA required".to_owned());
 
-    let state_two_fa_code_store = app.app_state.two_fa_code_store.read().await;
+    {
+        let state_two_fa_code_store= app.app_state.two_fa_code_store.read().await;
 
-    let email = Email::parse(random_email).unwrap();
-    let two_fa_code_store = state_two_fa_code_store.get_code(&email).await.unwrap();
+        let email = Email::parse(random_email).unwrap();
+        let two_fa_code_store = state_two_fa_code_store.get_code(&email).await.unwrap();
 
-    assert_eq!(json_body.login_attempt_id, two_fa_code_store.0.as_ref())
+        assert_eq!(json_body.login_attempt_id, two_fa_code_store.0.as_ref());
+    }
+
+    app.clean_up().await;
 }

@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use crate::domain::BannedTokenStore;
+use crate::domain::data_store::{BannedTokenStore, BannedTokenStoreError};
 
 #[derive(Default)]
 pub struct HashsetBannedTokenStore {
@@ -9,12 +9,14 @@ pub struct HashsetBannedTokenStore {
 
 #[async_trait::async_trait]
 impl BannedTokenStore for HashsetBannedTokenStore {
-    async fn storing_tokens(&mut self, token: String) {
+    async fn storing_tokens(&mut self, token: String) -> Result<(), BannedTokenStoreError> {
         self.tokens.insert(token);
+        Ok(())
     }
 
-    async fn token_is_banned(&self, token: &str) -> bool {
-        self.tokens.contains(token)
+    async fn token_is_banned(&self, token: &str) -> Result<bool, BannedTokenStoreError> {
+        let result = self.tokens.contains(token);
+        Ok(result)
     }
 }
 
@@ -42,7 +44,7 @@ mod test {
 
         banned_tokens_store.storing_tokens(token.clone()).await;
 
-        let token_is_banned= banned_tokens_store.token_is_banned(&token).await;
+        let token_is_banned= banned_tokens_store.token_is_banned(&token).await.unwrap();
 
         assert!(token_is_banned);
     }

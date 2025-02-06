@@ -1,6 +1,6 @@
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use super::{Email, Password, User};
+use crate::domain::{Email, Password, User};
 
 #[async_trait::async_trait]
 pub trait UserStore: Send + Sync {
@@ -20,10 +20,15 @@ pub enum UserStoreError {
 
 #[async_trait::async_trait]
 pub trait BannedTokenStore: Send + Sync {
-    async fn storing_tokens(&mut self, token: String);
-    async fn token_is_banned(&self, token: &str) -> bool;
+    async fn storing_tokens(&mut self, token: String) -> Result<(), BannedTokenStoreError>;
+    async fn token_is_banned(&self, token: &str) -> Result<bool, BannedTokenStoreError>;
 }
 
+#[derive(Debug, PartialEq)]
+pub enum BannedTokenStoreError {
+    BannedTokenNotFound,
+    UnexpectedError
+}
 
 #[async_trait::async_trait]
 pub trait TwoFACodeStore: Send + Sync {
@@ -38,7 +43,7 @@ pub enum TwoFACodeStoreError {
     UnexpectedError,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LoginAttemptId(String);
 
 impl LoginAttemptId {
@@ -64,7 +69,7 @@ impl AsRef<str> for LoginAttemptId {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct TwoFACode(String);
 
 impl TwoFACode {

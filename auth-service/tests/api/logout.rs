@@ -5,7 +5,7 @@ use crate::helpers::{get_random_email, TestApp};
 
 #[tokio::test]
 async fn should_return_200_if_valid_jwt_cookie() {
-    let app = TestApp::new().await;
+    let mut app = TestApp::new().await;
 
     let random_email = get_random_email();
 
@@ -27,24 +27,27 @@ async fn should_return_200_if_valid_jwt_cookie() {
 
     let logout_response = app.post_logout().await;
     assert_eq!(logout_response.status().as_u16(), 200);
-    
-    let banned_token_store = app.app_state.banned_token_store.read().await;
-    
-    let token = login_response.cookies()
-        .find(|cookie| cookie.name() == JWT_COOKIE_NAME)
-        .unwrap()
-        .value()
-        .to_string();
 
-    let token_is_banned = banned_token_store.token_is_banned(&token).await;
+    {
+        let banned_token_store = app.app_state.banned_token_store.read().await;
 
-    assert!(token_is_banned);
+        let token = login_response.cookies()
+            .find(|cookie| cookie.name() == JWT_COOKIE_NAME)
+            .unwrap()
+            .value()
+            .to_string();
 
+        let token_is_banned = banned_token_store.token_is_banned(&token).await.unwrap();
+
+        assert!(token_is_banned);
+    }
+
+    app.clean_up().await;
 }
 
 #[tokio::test]
 async fn should_return_400_if_logout_called_twice_in_a_row() {
-    let app = TestApp::new().await;
+    let mut app = TestApp::new().await;
 
     let random_email = get_random_email();
 
@@ -55,7 +58,6 @@ async fn should_return_400_if_logout_called_twice_in_a_row() {
     });
 
     app.post_signup(&signup_body).await;
-
 
     let login_body = serde_json::json!({
         "email": random_email,
@@ -69,22 +71,26 @@ async fn should_return_400_if_logout_called_twice_in_a_row() {
 
     let response = app.post_logout().await;
     assert_eq!(response.status().as_u16(), 400);
+
+    app.clean_up().await;
 }
 
 #[tokio::test]
 async fn should_return_400_if_jwt_cookie_missing() {
-    let app = TestApp::new().await;
+    let mut app = TestApp::new().await;
 
     let response = app.post_logout().await;
     assert_eq!(
         response.status().as_u16(),
         400
     );
+
+    app.clean_up().await;
 }
 
 #[tokio::test]
 async fn should_return_401_if_invalid_token() {
-    let app = TestApp::new().await;
+    let mut app = TestApp::new().await;
 
     // add invalid cookie
     app.cookie_jar.add_cookie_str(
@@ -102,4 +108,6 @@ async fn should_return_401_if_invalid_token() {
         "Failed for input: {:?}",
         JWT_COOKIE_NAME
     );
+
+    app.clean_up().await;
 }
